@@ -43,8 +43,8 @@ gibbs_bspline(data, Ntotal, burnin, thin = 1, k.theta = 0.01, MG = 1,
 \value{
 A list containing the following components:
    \item{psd.median,psd.mean}{psd estimates: (pointwise) posterior median and mean}
-   \item{psd.p05,psd.p95}{pointwise credibility interval}
-   \item{psd.u05,psd.u95}{uniform credibility interval}
+   \item{psd.p05,psd.p95}{90\% pointwise credibility interval}
+   \item{psd.u05,psd.u95}{90\% uniform credibility interval}
    \item{k,tau,V,Z,U,X}{posterior traces of model parameters}
    \item{knots.trace}{trace of knot placements}
    \item{ll.trace}{trace of log likelihood}
@@ -68,12 +68,12 @@ mcmc = gibbs_bspline(data, Ntotal = 4000, burnin = 2000, thin = 1)
 
 # Compare estimate with true PSD
 require(beyondWhittle)  # For psd_arma() function
-freq = 2 * pi / n * (1:(n / 2 + 1) - 1)[-c(1, n / 2 + 1)]
+freq = 2 * pi / n * (1:(n / 2 + 1) - 1)[-1]  # Remove 0 frequency
 psd.true <- psd_arma(freq, ar = 0.9, ma = numeric(0), sigma2 = 1)
-plot(x = freq, y = psd.true, col = 2, type = "l", xlab = "Frequency", ylab = "PSD")
-lines(x = freq, y = mcmc$psd.median, type = "l")
-lines(x = freq, y = mcmc$psd.p05, type = "l", lty = 2)
-lines(x = freq, y = mcmc$psd.p95, type = "l", lty = 2)
+plot(x = freq, y = log(psd.true), col = 2, type = "l", xlab = "Frequency", ylab = "log PSD")
+lines(x = freq, y = log(mcmc$psd.median[-1]), type = "l")
+lines(x = freq, y = log(mcmc$psd.p05[-1]), type = "l", lty = 2)
+lines(x = freq, y = log(mcmc$psd.p95[-1]), type = "l", lty = 2)
 legend(x = "topright", legend = c("true psd", "pointwise median", "pointwise CI"), 
 lty = c(1, 1, 2), col = c(2, 1, 1))
 }

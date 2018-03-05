@@ -79,3 +79,9 @@ densityMixture <- function(weights, densities) {
     .Call(`_bsplinePsd_densityMixture`, weights, densities)
 }
 
+#' C++ help function to redundantly roll out a PSD to length n
+#' @keywords internal
+unrollPsd <- function(qPsd, n) {
+    .Call(`_bsplinePsd_unrollPsd`, qPsd, n)
+}
+

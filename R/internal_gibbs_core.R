@@ -99,7 +99,6 @@ qpsd <- function(omega, k, v, w, u, z, degree, recompute, db.list) {
   psd <- densityMixture(weight, db.list)
   epsilon <- 1e-20 
   psd <- pmax(psd, epsilon)
-  psd <- psd[-c(1, length(psd))]  # COME BACK TO THIS.  Do we want to remove this?
   
   return(list(psd = psd,
               knots = knots,
@@ -129,24 +128,28 @@ lprior <- function(k, v, w, u, z, tau, k.theta,
 #' @keywords internal
 llike <- function(omega, FZ, k, v, w, u, z, tau, pdgrm, degree, recompute, db.list) {
   
-  # Calculates Whittle or corrected log-likelihood (assume n even) for Gaussian errors
+  # Calculates Whittle log-likelihood for Gaussian errors
   
   n <- length(FZ)
-  m <- n - 2  # *** NOTE: Hard-coded for cubic B-splines ***  REALLY???  Don't think so.
+  ###m <- n - 2  # Hard coded for even length time series
+  
+  # Which boundary frequencies to remove from likelihood computation
+  if (n %% 2) {  # Odd length time series
+    bFreq <- 1  # Remove first
+  } 
+  else {  # Even length time series
+    bFreq <- c(1, n)  # Remove first and last
+  }
   
   # Un-normalised PSD (defined on [0, 1])
   qq.psd <- qpsd(omega, k, v, w, u, z, degree, recompute, db.list)
-  q.psd <- qq.psd$psd
-  q <- rep(NA, m) 
-  q[1] <- q.psd[1]
-  q[m] <- q.psd[length(q.psd)]
-  q[2 * 1:(m / 2 - 1)] <- q[2 * 1:(m / 2 - 1) + 1] <- q.psd[1:(m / 2 - 1) + 1]
+  q = unrollPsd(qq.psd$psd, n)  # Unrolls the unnormalised PSD to length n
   
   # Normalised PSD (defined on [0, pi])
   f <- tau * q
   
   # Whittle log-likelihood
-  llike <- -sum(log(f) + pdgrm[2:(n - 1)] / (f * 2 * pi)) / 2
+  llike <- -sum(log(f[-bFreq]) + pdgrm[-bFreq] / (f[-bFreq] * 2 * pi)) / 2
   
   return(list(llike = llike,
               db.list = qq.psd$db.list))  

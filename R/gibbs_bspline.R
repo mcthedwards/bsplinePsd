@@ -18,8 +18,8 @@
 #' @param degree integer equal to 1, 2, or 3 (default) specifying the degree of the B-splines (1 = linear, 2 = quadratic, 3 = cubic)
 #' @return A list containing the following components:
 #'    \item{psd.median,psd.mean}{psd estimates: (pointwise) posterior median and mean}
-#'    \item{psd.p05,psd.p95}{pointwise credibility interval}
-#'    \item{psd.u05,psd.u95}{uniform credibility interval}
+#'    \item{psd.p05,psd.p95}{90\% pointwise credibility interval}
+#'    \item{psd.u05,psd.u95}{90\% uniform credibility interval}
 #'    \item{k,tau,V,Z,U,X}{posterior traces of model parameters}
 #'    \item{knots.trace}{trace of knot placements}
 #'    \item{ll.trace}{trace of log likelihood}
@@ -40,12 +40,12 @@
 #'
 #' # Compare estimate with true PSD
 #' require(beyondWhittle)  # For psd_arma() function
-#' freq = 2 * pi / n * (1:(n / 2 + 1) - 1)[-c(1, n / 2 + 1)]
+#' freq = 2 * pi / n * (1:(n / 2 + 1) - 1)[-1]  # Remove 0 frequency
 #' psd.true <- psd_arma(freq, ar = 0.9, ma = numeric(0), sigma2 = 1)
-#' plot(x = freq, y = psd.true, col = 2, type = "l", xlab = "Frequency", ylab = "PSD")
-#' lines(x = freq, y = mcmc$psd.median, type = "l")
-#' lines(x = freq, y = mcmc$psd.p05, type = "l", lty = 2)
-#' lines(x = freq, y = mcmc$psd.p95, type = "l", lty = 2)
+#' plot(x = freq, y = log(psd.true), col = 2, type = "l", xlab = "Frequency", ylab = "log PSD")
+#' lines(x = freq, y = log(mcmc$psd.median[-1]), type = "l")
+#' lines(x = freq, y = log(mcmc$psd.p05[-1]), type = "l", lty = 2)
+#' lines(x = freq, y = log(mcmc$psd.p95[-1]), type = "l", lty = 2)
 #' legend(x = "topright", legend = c("true psd", "pointwise median", "pointwise CI"), 
 #' lty = c(1, 1, 2), col = c(2, 1, 1))
 #' }
@@ -73,7 +73,13 @@ gibbs_bspline <- function(data,
   
   n <- length(data)
   
-  if (n %% 2 != 0) stop("this version of bsplinePsd must have n even")
+  # Which boundary frequencies to remove from likelihood computation and tau sample
+  if (n %% 2) {  # Odd length time series
+    bFreq <- 1  # Remove first
+  } 
+  else {  # Even length time series
+    bFreq <- c(1, n)  # Remove first and last
+  }
   
   # Tolerance for mean centering
   tol <- 1e-4
@@ -81,13 +87,12 @@ gibbs_bspline <- function(data,
   # Mean center
   if (abs(mean(data)) > tol) {
     data <- data - mean(data)
-    warning("Data has been mean-centred")
+    warning("data has been mean-centered")
   }
   
   if (burnin >= Ntotal) stop("burnin must be less than Ntotal")
-  if (any(c(Ntotal, burnin, thin) %% 1 != 0 || any(c(Ntotal, burnin, thin) < 0))) 
   if (any(c(MG, MH, G0.alpha, G0.beta, H0.alpha, H0.beta, tau.alpha, tau.beta, k.theta) <= 0)) stop("MG, MH, G0.alpha, G0.beta, H0.alpha, H0.beta, tau.alpha, tau.beta, and k.theta must be strictly positive")
-  if (any(c(Ntotal, thin, kmax, LG, LH) %% 1 != 0) || any(c(Ntotal, thin, kmax, LG, LH) <= 0)) stop("Ntotal, kmax, LG, and LH must be strictly positive integers")
+  if (any(c(Ntotal, thin, kmax, LG, LH) %% 1 != 0) || any(c(Ntotal, thin, kmax, LG, LH) <= 0)) stop("Ntotal, thin, kmax, LG, and LH must be strictly positive integers")
   if ((burnin %% 1 != 0) || (burnin < 0)) stop("burnin must be a non-negative integer")
 
   FZ <- fast_ft(data)  # FFT data to frequency domain.  NOTE: Must be mean-centred.
@@ -113,10 +118,10 @@ gibbs_bspline <- function(data,
   Z[, 1] <- stats::rbeta(LH + 1, H0.alpha, H0.beta)  # G0.alpha = G0.beta = 1 gives U[0,1]
   
   if (is.na(k1)) {  # If k1 is NA, user does not specify starting value for k
-    k[1] = sample((degree + 2):kmax, 1)  # Need at least k = 5 for cubic B-splines and 3 for linear
+    k[1] = sample((degree + 2):kmax, 1)  # Need at least k = 5, 4, 3 for cubic, quadratic, linear B-splines respectively
   }
   else {  # User specified starting value for k
-    if ((k1 < (degree + 2)) || (k1 > kmax)) stop("k must be at least degree + 2 and no more than kmax")  
+    if ((k1 < (degree + 2)) || (k1 > kmax)) stop("k must be at least degree + 2 and no more than kmax") 
     k[1] <- k1
   }
 
@@ -473,15 +478,17 @@ gibbs_bspline <- function(data,
     #####
     q.psd <- qpsd(omega, k[i + 1], V[, i + 1], W[, i + 1], U[, i + 1], Z[, i + 1], 
                   degree, recompute = FALSE, db.list)$psd
-    m <- n - 2
-    q <- rep(NA, m)
-    q[1] <- q.psd[1]
-    q[m] <- q.psd[length(q.psd)]
-    q[2 * 1:(m / 2 - 1)] <- q[2 * 1:(m / 2 - 1) + 1] <- q.psd[1:(m / 2 - 1) + 1]
+    q <- unrollPsd(q.psd, n)
     
-    # Note the (n - 2) here - we remove the first and last terms
-    tau[i + 1] <- 1 / stats::rgamma(1, tau.alpha + (n - 2) / 2, 
-                                    tau.beta + sum(pdgrm[2:(n - 1)] / q) / (2 * pi) / 2)
+    # Note: (n - 1) and (n - 2) here.  Remove the first and last terms for even and first for odd
+    if (n %% 2) {  # Odd length series
+      tau[i + 1] <- 1 / stats::rgamma(1, tau.alpha + (n - 1) / 2, 
+                                      tau.beta + sum(pdgrm[-bFreq] / q[-bFreq]) / (2 * pi) / 2)
+    }
+    else {  # Even length series
+      tau[i + 1] <- 1 / stats::rgamma(1, tau.alpha + (n - 2) / 2, 
+                                      tau.beta + sum(pdgrm[-bFreq] / q[-bFreq]) / (2 * pi) / 2)
+    }
     #####
     # End: Step 6
     #####
@@ -507,7 +514,7 @@ gibbs_bspline <- function(data,
   Z <- Z[, keep]
   ll.trace <- ll.trace[keep]
   
-  fpsd.sample <- log.fpsd.sample <- matrix(NA, nrow = length(omega) - 2, ncol = length(keep))
+  fpsd.sample <- log.fpsd.sample <- matrix(NA, nrow = length(omega), ncol = length(keep))
   knots.trace <- matrix(NA, nrow = kmax, ncol = length(keep))
   
   # Store PSDs
@@ -519,17 +526,23 @@ gibbs_bspline <- function(data,
     log.fpsd.sample[, isample] <- logfuller(fpsd.sample[, isample])  # Create transformed version
   }
   
+  #ci.l = (1 - ci) / 2
+  #ci.u = 1 - ci.l
+  
   # Compute point estimates and 90% Pointwise CIs
   psd.median <- apply(fpsd.sample, 1, stats::median)
   psd.mean <- apply(fpsd.sample, 1, mean)
   psd.p05 <- apply(fpsd.sample, 1, stats::quantile, probs=0.05)
   psd.p95 <- apply(fpsd.sample, 1, stats::quantile, probs=0.95)
+  #psd.p.lower <- apply(fpsd.sample, 1, stats::quantile, probs=ci.l)
+  #psd.p.upper <- apply(fpsd.sample, 1, stats::quantile, probs=ci.u)
   
   # Transformed versions of these for uniform CI construction
   log.fpsd.s <- apply(log.fpsd.sample, 1, stats::median)
   log.fpsd.mad <- apply(log.fpsd.sample, 1, stats::mad)
   log.fpsd.help <- apply(log.fpsd.sample, 1, uniformmax)
   log.Cvalue <- stats::quantile(log.fpsd.help, 0.9)
+  #log.Cvalue <- stats::quantile(log.fpsd.help, ci)
   
   # Compute Uniform CIs
   psd.u95 <- exp(log.fpsd.s + log.Cvalue * log.fpsd.mad)

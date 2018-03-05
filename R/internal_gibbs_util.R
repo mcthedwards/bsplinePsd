@@ -18,10 +18,19 @@ fast_ft <- function(x) {
   
   # Extract non-redundant real and imaginary coefficients in correct order and rescale
   FZ <- rep(NA, n)
-  FZ[1] <- Re(fourier[1])  # First coefficient
-  FZ[n] <- Re(fourier[n / 2 + 1])  # Last coefficient
-  FZ[2 * 1:(n / 2 - 1)] <- sqrt2 * Re(fourier[2:(n / 2)])  # Real coefficients
-  FZ[2 * 1:(n / 2 - 1) + 1] <- sqrt2 * Im(fourier[2:(n / 2)])  # Imaginary coefficients
+  
+  FZ[1] <- Re(fourier[1]) # First coefficient
+  
+  if (n %% 2) {  # Odd length time series
+    N <- (n - 1) / 2
+    FZ[2 * (1:N)] <- sqrt2 * Re(fourier[2:(N + 1)]) # Real coefficients
+    FZ[2 * (1:N) + 1] <- sqrt2 * Im(fourier[2:(N + 1)]) # Imaginary coefficients
+  } 
+  else {  # Even length time series
+    FZ[n] <- Re(fourier[n / 2 + 1]) # Last coefficient
+    FZ[2 * 1:(n / 2 - 1)] <- sqrt2 * Re(fourier[2:(n / 2)]) # Real coefficients
+    FZ[2 * 1:(n / 2 - 1) + 1] <- sqrt2 * Im(fourier[2:(n / 2)]) # Imaginary coefficients
+  }
   
   return(FZ / sqrtn)
   
