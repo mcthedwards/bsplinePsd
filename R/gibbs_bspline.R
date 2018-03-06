@@ -16,13 +16,14 @@
 #' @param kmax upper bound for number of B-spline densities in mixture
 #' @param k1 starting value for k.  If k1 = NA then a random starting value between 5 and kmax is selected
 #' @param degree integer equal to 1, 2, or 3 (default) specifying the degree of the B-splines (1 = linear, 2 = quadratic, 3 = cubic)
-#' @return A list containing the following components:
+#' @return A list with S3 class 'psd' containing the following components:
 #'    \item{psd.median,psd.mean}{psd estimates: (pointwise) posterior median and mean}
 #'    \item{psd.p05,psd.p95}{90\% pointwise credibility interval}
 #'    \item{psd.u05,psd.u95}{90\% uniform credibility interval}
 #'    \item{k,tau,V,Z,U,X}{posterior traces of model parameters}
 #'    \item{knots.trace}{trace of knot placements}
 #'    \item{ll.trace}{trace of log likelihood}
+#'    \item{pdgrm}{periodogram}
 #' @references Edwards, M. C., Meyer, R., and Christensen, N. (2018), Bayesian nonparametric spectral density estimation using B-spline priors, \emph{Statistics and Computing}, https://doi.org/10.1007/s11222-017-9796-9.
 #' 
 #' Choudhuri, N., Ghosal, S., and Roy, A. (2004), Bayesian estimation of the spectral density of a time series, \emph{Journal of the American Statistical Association}, 99(468):1050--1059.
@@ -548,19 +549,36 @@ gibbs_bspline <- function(data,
   psd.u95 <- exp(log.fpsd.s + log.Cvalue * log.fpsd.mad)
   psd.u05 <- exp(log.fpsd.s - log.Cvalue * log.fpsd.mad)
   
-  return(list(psd.median = psd.median,
-              psd.mean = psd.mean,
-              psd.p05 = psd.p05,
-              psd.p95 = psd.p95,
-              psd.u05 = psd.u05,
-              psd.u95 = psd.u95,
-              k = k,
-              tau = tau,
-              V = V,
-              Z = W,  # W here is called Z in paper
-              U = U,
-              X = Z,  # Z here is called X in paper
-              knots.trace = knots.trace,
-              ll.trace = ll.trace))
+  # Compute periodogram
+  N = length(psd.median)  # N = (n + 1) / 2 (ODD) or N = n / 2 + 1 (EVEN)
+  kappa = rep(2, N)  # Open kappa object.  Most multiply by 2 but ends not.
+  if (n %% 2) {  # Odd length time series
+    kappa[1] = 1  # Zero frequency
+  } 
+  else {  # Even length time series
+    kappa[c(1, length(kappa))] = 1  # 0 and Nyquist frequency
+  }
+  pdgrm = kappa * (abs(stats::fft(data)) ^ 2 / (2 * pi * n))[1:N]
+  
+  # List to output
+  output = list(psd.median = psd.median,
+                psd.mean = psd.mean,
+                psd.p05 = psd.p05,
+                psd.p95 = psd.p95,
+                psd.u05 = psd.u05,
+                psd.u95 = psd.u95,
+                k = k,
+                tau = tau,
+                V = V,
+                Z = W,  # W here is called Z in paper
+                U = U,
+                X = Z,  # Z here is called X in paper
+                knots.trace = knots.trace,
+                ll.trace = ll.trace,
+                pdgrm = pdgrm)
+  
+  class(output) = "psd"  # Assign S3 class to object
+  
+  return(output)  # Return output
   
 }  # Close function

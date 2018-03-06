@@ -1,8 +1,10 @@
-## bsplinePsd 0.4.0
+## bsplinePsd 0.4.1
 
-Versions 0.1.0 and 0.2.0 only generated cubic B-spline densities.  This version also allows the user to choose linear or quadratic B-spline densities.  The user can specify degree = 1 for linear B-spline densities, degree = 2 for quadratic B-spline densities, and degree = 3 (default) for cubic B-spline densities.
+Previous versions only allowed the user to use cubic B-spline densities.  This version allows the user to choose between linear, quadratic, or cubic B-spline densities.  The user can specify degree = 1 for linear B-spline densities, degree = 2 for quadratic B-spline densities, and degree = 3 (default) for cubic B-spline densities.
 
 The function gibbs_bspline can now handle odd length time series.
+
+An S3 plot method has been included so the user can easily plot their PSD estimate.
 
 ## bsplinePsd 0.2.0
 

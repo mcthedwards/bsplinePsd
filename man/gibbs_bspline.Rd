@@ -41,13 +41,14 @@ gibbs_bspline(data, Ntotal, burnin, thin = 1, k.theta = 0.01, MG = 1,
 \item{degree}{integer equal to 1, 2, or 3 (default) specifying the degree of the B-splines (1 = linear, 2 = quadratic, 3 = cubic)}
 }
 \value{
-A list containing the following components:
+A list with S3 class psd containing the following components:
    \item{psd.median,psd.mean}{psd estimates: (pointwise) posterior median and mean}
    \item{psd.p05,psd.p95}{90\% pointwise credibility interval}
    \item{psd.u05,psd.u95}{90\% uniform credibility interval}
    \item{k,tau,V,Z,U,X}{posterior traces of model parameters}
    \item{knots.trace}{trace of knot placements}
    \item{ll.trace}{trace of log likelihood}
+   \item{pdgrm}{periodogram}
 }
 \description{
 This function updates the (linear, quadratic, or cubic) B-spline prior using the Whittle likelihood and obtains samples from the pseudo-posterior to infer the spectral density of a stationary time series.
