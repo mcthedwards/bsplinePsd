@@ -24,6 +24,7 @@
 #'    \item{knots.trace}{trace of knot placements}
 #'    \item{ll.trace}{trace of log likelihood}
 #'    \item{pdgrm}{periodogram}
+#'    \item{n}{integer length of input time series}
 #' @references Edwards, M. C., Meyer, R., and Christensen, N. (2018), Bayesian nonparametric spectral density estimation using B-spline priors, \emph{Statistics and Computing}, https://doi.org/10.1007/s11222-017-9796-9.
 #' 
 #' Choudhuri, N., Ghosal, S., and Roy, A. (2004), Bayesian estimation of the spectral density of a time series, \emph{Journal of the American Statistical Association}, 99(468):1050--1059.
@@ -576,7 +577,8 @@ gibbs_bspline <- function(data,
                 X = Z,  # Z here is called X in paper
                 knots.trace = knots.trace,
                 ll.trace = ll.trace,
-                pdgrm = pdgrm)
+                pdgrm = pdgrm,
+                n = n)
   
   class(output) = "psd"  # Assign S3 class to object
   
