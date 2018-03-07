@@ -551,14 +551,15 @@ gibbs_bspline <- function(data,
   
   # Compute periodogram
   N = length(psd.median)  # N = (n + 1) / 2 (ODD) or N = n / 2 + 1 (EVEN)
-  kappa = rep(2, N)  # Open kappa object.  Most multiply by 2 but ends not.
-  if (n %% 2) {  # Odd length time series
-    kappa[1] = 1  # Zero frequency
-  } 
-  else {  # Even length time series
-    kappa[c(1, length(kappa))] = 1  # 0 and Nyquist frequency
-  }
-  pdgrm = kappa * (abs(stats::fft(data)) ^ 2 / (2 * pi * n))[1:N]
+  pdgrm = (abs(stats::fft(data)) ^ 2 / (2 * pi * n))[1:N]
+  # kappa = rep(2, N)  # Open kappa object.  Most multiply by 2 but ends not.
+  # if (n %% 2) {  # Odd length time series
+  #   kappa[1] = 1  # Zero frequency
+  # } 
+  # else {  # Even length time series
+  #   kappa[c(1, length(kappa))] = 1  # 0 and Nyquist frequency
+  # }
+  # pdgrm = kappa * (abs(stats::fft(data)) ^ 2 / (2 * pi * n))[1:N]
   
   # List to output
   output = list(psd.median = psd.median,
