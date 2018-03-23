@@ -2,36 +2,38 @@
 % Please edit documentation in R/internal_gibbs_core.R
 \name{dbspline}
 \alias{dbspline}
-\title{Generate a linear, quadratic, or cubic B-spline density basis}
+\title{Generate a B-spline density basis of any degree}
 \usage{
 dbspline(x, knots, degree = 3)
 }
 \arguments{
 \item{x}{numeric vector for which the B-spline densities are to be generated}
 
-\item{knots}{knots used to generate the linear, quadratic, or cubic B-spline densities}
+\item{knots}{knots used to generate the B-spline densities}
 
-\item{degree}{integer equal to 1, 2, or 3 (default), specifying the degree of the B-splines (1 = linear, 2 = quadratic, 3 = cubic)}
+\item{degree}{positive integer specifying the degree of the B-spline densities (default is 3 for cubic B-splines)}
 }
 \value{
 matrix of the B-spline density basis
 }
 \description{
-This function generates a linear, quadratic, or cubic B-spline density basis.
+This function generates a B-spline density basis of any degree.
 }
 \details{
-\link{splineDesign} is used to generate a linear, quadratic, or cubic B-spline basis.  Each B-spline is then normalised to become a B-spline density using analytical integration.  Note that the two end knots are each coincident four times for cubic B-splines, three times for quadratic B-splines, and two times for linear B-splines.
+\link{splineDesign} is used to generate a B-spline basis of any degree.  Each B-spline is then normalised to become a B-spline density using analytical integration.  Note that the two boundary knots (0 and 1) are each coincident \code{degree} + 1 times.
 }
 \examples{
 \dontrun{
 
 # Generate basis functions
+set.seed(1)
 x = seq(0, 1, length = 256)
 knots = sort(c(0, runif(10), 1))
 basis = dbspline(x, knots)
 
 # Plot basis functions
-plot(x, basis[1, ], type = "l", ylim = c(min(basis), max(basis)))
+plot(x, basis[1, ], type = "l", ylim = c(min(basis), max(basis)), 
+     ylab = expression(b[3](x)), main = "Cubic B-spline Density Basis Functions")
 for (i in 2:nrow(basis)) lines(x, basis[i, ], col = i)
 }
 }

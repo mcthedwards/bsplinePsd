@@ -1,5 +1,5 @@
 #' Plot method for psd class
-#' @description This function plots the log periodogram, log posterior median PSD, and log 90\% credible region PSD.  The x-axis uses angular frequency and the y-axis is plotted on the log scale.  The PSD at the zero frequency is removed from the plot.
+#' @description This function plots the log periodogram, log posterior median PSD, and log 90\% credible region PSD.  The x-axis uses angular frequency and the y-axis is plotted on the log scale.  The PSD at the zero frequency is removed from the plot.  If the time series is even length, the PSD at the last frequency is also removed from the plot.
 #' @export
 #' @param x an object of class psd
 #' @param ... other graphical parameters from the plot.default function
@@ -14,14 +14,14 @@
 #' data = arima.sim(n, model = list(ar = ar.ex))
 #' data = data - mean(data)
 #' 
-#' # Run MCMC with linear B-spline prior
-#' mcmc = gibbs_bspline(data, 4000, 2000, 1, degree = 1)
+#' # Run MCMC with linear B-spline prior (may take some time)
+#' mcmc = gibbs_bspline(data, 10000, 5000, 1, degree = 1)
 #' 
 #' # Plot result
 #' plot(mcmc)
 #' 
 #' # Plot result with title
-#' plot(mcmc, main = "log PSD estimate using the linear B-spline prior")
+#' plot(mcmc, main = "Estimate of log PSD using the linear B-spline prior")
 #' }
 plot.psd = function(x, ...) {  # Plot method for "psd" class
   N = length(x$pdgrm)

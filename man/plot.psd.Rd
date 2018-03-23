@@ -15,7 +15,7 @@
 plot of the estimate of the log PSD
 }
 \description{
-This function plots the log periodogram, log posterior median PSD, and log 90\% credible region PSD.  The x-axis uses angular frequency and the y-axis is plotted on the log scale.  The zero frequency is removed from the plot.
+This function plots the log periodogram, log posterior median PSD, and log 90\% credible region PSD.  The x-axis uses angular frequency and the y-axis is plotted on the log scale.  The PSD at the zero frequency is removed from the plot.  If the time series is even length, the PSD at the last frequency is also removed from the plot.
 }
 \examples{
 \dontrun{
@@ -26,14 +26,14 @@ ar.ex = c(0.9, -0.9, 0.9, -0.9)
 data = arima.sim(n, model = list(ar = ar.ex))
 data = data - mean(data)
 
-# Run MCMC with linear B-spline prior
+# Run MCMC with linear B-spline prior (may take some time)
 mcmc = gibbs_bspline(data, 10000, 5000, 1, degree = 1)
 
 # Plot result
 plot(mcmc)
 
 # Plot result with title
-plot(mcmc, main = "log PSD estimate using the linear B-spline prior")
+plot(mcmc, main = "Estimate of log PSD using the linear B-spline prior")
 }
 }
 \seealso{

@@ -1,64 +1,40 @@
-#' Generate a linear, quadratic, or cubic B-spline density basis
-#' @description This function generates a linear, quadratic, or cubic B-spline density basis.
-#' @details \link{splineDesign} is used to generate a linear, quadratic, or cubic B-spline basis.  Each B-spline is then normalised to become a B-spline density using analytical integration.  Note that the two end knots are each coincident four times for cubic B-splines, three times for quadratic B-splines, and two times for linear B-splines.
+#' Generate a B-spline density basis of any degree
+#' @description This function generates a B-spline density basis of any degree.
+#' @details \link{splineDesign} is used to generate a B-spline basis of any degree.  Each B-spline is then normalised to become a B-spline density using analytical integration.  Note that the two boundary knots (0 and 1) are each coincident \code{degree} + 1 times.
 #' @importFrom splines splineDesign
 #' @importFrom Rcpp evalCpp
 #' @useDynLib bsplinePsd, .registration = TRUE
 #' @export
 #' @param x numeric vector for which the B-spline densities are to be generated
-#' @param knots knots used to generate the linear, quadratic, or cubic B-spline densities
-#' @param degree integer equal to 1, 2, or 3 (default), specifying the degree of the B-splines (1 = linear, 2 = quadratic, 3 = cubic)
+#' @param knots knots used to generate the B-spline densities
+#' @param degree positive integer specifying the degree of the B-spline densities (default is 3 for cubic B-splines)
 #' @return matrix of the B-spline density basis
 #' @seealso \link{splineDesign}
 #' @examples 
 #' \dontrun{
 #' 
 #' # Generate basis functions
+#' set.seed(1)
 #' x = seq(0, 1, length = 256)
 #' knots = sort(c(0, runif(10), 1))
 #' basis = dbspline(x, knots)
 #' 
 #' # Plot basis functions
-#' plot(x, basis[1, ], type = "l", ylim = c(min(basis), max(basis)))
+#' plot(x, basis[1, ], type = "l", ylim = c(min(basis), max(basis)), 
+#'      ylab = expression(b[3](x)), main = "Cubic B-spline Density Basis Functions")
 #' for (i in 2:nrow(basis)) lines(x, basis[i, ], col = i)
 #' }
 dbspline = function (x, knots, degree = 3)  {
   
-  if (!(degree %in% c(1, 2, 3))) stop("degree must be 1, 2, or 3 in this version of the package")
-  
   knots.mult <- c(rep(knots[1], degree), knots, rep(knots[length(knots)], degree))
+  nknots = length(knots.mult)  # Number of knots including external knots
   
   B <- splines::splineDesign(knots.mult, x, ord = degree + 1, outer.ok = TRUE)
-  
-  if (degree == 3) {  # Cubic B-spline normaliser
-    bs_int <- rep(NA, length = length(knots.mult) - 4)
-    for (ii in 1:(length(knots.mult) - 4)) {
-      part <- knots.mult[ii:(ii + 4)]
-      bs_int[ii] <- AnIn1(part) + AnIn2(part) + AnIn3(part) + 
-        AnIn4(part) + AnIn5(part) + AnIn6(part) + AnIn7(part) + 
-        AnIn8(part)
-      if (bs_int[ii] == 0) {
-        bs_int[ii] <- Inf
-      }
-    }
-  }
-  
-  if (degree == 2) {  # Quadratic B-spline normaliser
-    bs_int <- rep(NA, length = length(knots.mult) - 3)
-    for (ii in 1:(length(knots.mult) - 3)) {
-      part <- knots.mult[ii:(ii + 3)]
-      bs_int[ii] <- AnInQ1(part) + AnInQ2(part) + AnInQ3(part) + AnInQ4(part) 
-      if (bs_int[ii] == 0) {
-        bs_int[ii] <- Inf
-      }
-    }
-  }
-  
-  if (degree == 1) { # Linear B-spline normaliser
-    bs_int = (knots.mult[3:length(knots.mult)] - knots.mult[1:(length(knots.mult) - 2)]) / 2  # Area of triangle (height always 1)
-    if (any(bs_int == 0)) bs_int[which(bs_int == 0)] = Inf  # Makes B.norm = 0 rather than NaN
-  }
-  
+
+  # Trivial normalisation formula
+  bs_int = (knots.mult[-(1:(degree + 1))] - knots.mult[-((nknots - degree):nknots)]) / (degree + 1)
+  if (any(bs_int == 0)) bs_int[which(bs_int == 0)] = Inf  # Makes B.norm = 0 rather than NaN
+    
   B.norm <- t(B) / bs_int  # Normalise
   
   return(B.norm)

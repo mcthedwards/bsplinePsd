@@ -1,6 +1,6 @@
-## bsplinePsd 0.4.1
+## bsplinePsd 0.5.0
 
-Previous versions only allowed the user to use cubic B-spline densities.  This version allows the user to choose between linear, quadratic, or cubic B-spline densities.  The user can specify degree = 1 for linear B-spline densities, degree = 2 for quadratic B-spline densities, and degree = 3 (default) for cubic B-spline densities.
+Previous versions only allowed the user to use cubic B-spline densities.  This version allows the user to choose any degree.  Normalising B-splines now uses a trivial integral formula.
 
 The function gibbs_bspline can now handle odd length time series.
 

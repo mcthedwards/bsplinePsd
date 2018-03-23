@@ -32,16 +32,16 @@ gibbs_bspline(data, Ntotal, burnin, thin = 1, k.theta = 0.01, MG = 1,
 
 \item{LH}{truncation parameter of Dirichlet process in stick breaking representation for knot placements of B-spline densities}
 
-\item{tau.alpha, tau.beta}{prior parameters for tau (Inverse Gamma)}
+\item{tau.alpha, tau.beta}{prior parameters for tau (Inverse-Gamma)}
 
 \item{kmax}{upper bound for number of B-spline densities in mixture}
 
-\item{k1}{starting value for k.  If k1 = NA then a random starting value between 5 and kmax is selected}
+\item{k1}{starting value for k.  If \code{k1} = NA then a random starting value between \code{degree} + 2 and \code{kmax} is selected}
 
-\item{degree}{integer equal to 1, 2, or 3 (default) specifying the degree of the B-splines (1 = linear, 2 = quadratic, 3 = cubic)}
+\item{degree}{positive integer specifying the degree of the B-spline densities (default is 3)}
 }
 \value{
-A list with S3 class psd containing the following components:
+A list with S3 class 'psd' containing the following components:
    \item{psd.median,psd.mean}{psd estimates: (pointwise) posterior median and mean}
    \item{psd.p05,psd.p95}{90\% pointwise credibility interval}
    \item{psd.u05,psd.u95}{90\% uniform credibility interval}
@@ -49,9 +49,10 @@ A list with S3 class psd containing the following components:
    \item{knots.trace}{trace of knot placements}
    \item{ll.trace}{trace of log likelihood}
    \item{pdgrm}{periodogram}
+   \item{n}{integer length of input time series}
 }
 \description{
-This function updates the (linear, quadratic, or cubic) B-spline prior using the Whittle likelihood and obtains samples from the pseudo-posterior to infer the spectral density of a stationary time series.
+This function updates the B-spline prior using the Whittle likelihood and obtains samples from the pseudo-posterior to infer the spectral density of a stationary time series.
 }
 \details{
 The function \code{gibbs_bspline} is an implementation of the (serial version of the) MCMC algorithm presented in Edwards et al. (2018).  This algorithm uses a nonparametric B-spline prior to estimate the spectral density of a stationary time series and can be considered a generalisation of the algorithm of Choudhuri et al. (2004), which used the Bernstein polynomial prior.  A Dirichlet process prior is used to find the weights for the B-spline densities used in the finite mixture and a seperate and independent Dirichlet process prior used to place knots.  The algorithm therefore allows for a data-driven choice of the number of knots/mixtures and their locations.
@@ -65,22 +66,20 @@ data = arima.sim(n, model = list(ar = 0.9))
 data = data - mean(data)
 
 # Run MCMC (may take some time)
-mcmc = gibbs_bspline(data, Ntotal = 4000, burnin = 2000, thin = 1)
+mcmc = gibbs_bspline(data, Ntotal = 10000, burnin = 5000, thin = 1)
 
-# Compare estimate with true PSD
 require(beyondWhittle)  # For psd_arma() function
-freq = 2 * pi / n * (1:(n / 2 + 1) - 1)[-1]  # Remove 0 frequency
-psd.true <- psd_arma(freq, ar = 0.9, ma = numeric(0), sigma2 = 1)
-plot(x = freq, y = log(psd.true), col = 2, type = "l", xlab = "Frequency", ylab = "log PSD")
-lines(x = freq, y = log(mcmc$psd.median[-1]), type = "l")
-lines(x = freq, y = log(mcmc$psd.p05[-1]), type = "l", lty = 2)
-lines(x = freq, y = log(mcmc$psd.p95[-1]), type = "l", lty = 2)
-legend(x = "topright", legend = c("true psd", "pointwise median", "pointwise CI"), 
-lty = c(1, 1, 2), col = c(2, 1, 1))
+freq = 2 * pi / n * (1:(n / 2 + 1) - 1)[-c(1, n / 2 + 1)]  # Remove first and last frequency
+psd.true = psd_arma(freq, ar = 0.9, ma = numeric(0), sigma2 = 1)  # True PSD
+plot(mcmc)  # Plot log PSD (see documentation of plot.psd)
+lines(freq, log(psd.true), col = 2, lty = 3, lwd = 2)  # Overlay true PSD
 }
 }
 \references{
-Edwards, M. C., Meyer, R., and Christensen, N. (2018), Bayesian nonparametric spectral density estimation using B-spline priors, \emph{Statistics and Computing}, https://doi.org/10.1007/s11222-017-9796-9.
+Edwards, M. C., Meyer, R., and Christensen, N. (2018), Bayesian nonparametric spectral density estimation using B-spline priors, \emph{Statistics and Computing}, <https://doi.org/10.1007/s11222-017-9796-9>.
 
 Choudhuri, N., Ghosal, S., and Roy, A. (2004), Bayesian estimation of the spectral density of a time series, \emph{Journal of the American Statistical Association}, 99(468):1050--1059.
+}
+\seealso{
+\link{plot.psd}
 }
