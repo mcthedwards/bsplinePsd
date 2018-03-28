@@ -60,13 +60,15 @@ The function \code{gibbs_bspline} is an implementation of the (serial version of
 \examples{
 \dontrun{
 
+set.seed(123456)
+
 # Generate AR(1) data with rho = 0.9
 n = 128
 data = arima.sim(n, model = list(ar = 0.9))
 data = data - mean(data)
 
 # Run MCMC (may take some time)
-mcmc = gibbs_bspline(data, Ntotal = 10000, burnin = 5000, thin = 1)
+mcmc = gibbs_bspline(data, 10000, 5000)
 
 require(beyondWhittle)  # For psd_arma() function
 freq = 2 * pi / n * (1:(n / 2 + 1) - 1)[-c(1, n / 2 + 1)]  # Remove first and last frequency
