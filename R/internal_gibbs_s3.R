@@ -2,7 +2,7 @@
 #' @description This function plots the log periodogram, log posterior median PSD, and log 90\% credible region PSD.  The x-axis uses angular frequency and the y-axis is plotted on the log scale.  The PSD at the zero frequency is removed from the plot.  If the time series is even length, the PSD at the last frequency is also removed from the plot.
 #' @export
 #' @param x an object of class psd
-#' @param legend.loc location of legend out of "topright" (default), "topleft", "bottomright", "bottomleft"
+#' @param legend.loc location of legend out of "topright" (default), "topleft", "bottomright", "bottomleft".  If set to NA then no legend will be produced
 #' @param ylog logical value (default is TRUE) to determine if PSD (y-axis) should be on natural log scale
 #' @param ... other graphical parameters from the plot.default function
 #' @return plot of the estimate of the (log) PSD
@@ -46,8 +46,10 @@ plot.psd = function(x, legend.loc = "topright", ylog = TRUE, ...) {  # Plot meth
     graphics::lines(freq[-bFreq], log(x$psd.median[-bFreq]), lwd = 2)
     graphics::lines(freq[-bFreq], log(x$psd.p05[-bFreq]), lwd = 2, lty = 2, col = 4)
     graphics::lines(freq[-bFreq], log(x$psd.p95[-bFreq]), lwd = 2, lty = 2, col = 4)
-    graphics::legend(legend.loc, legend = c("periodogram", "posterior median", "90% credible region"), 
-                     col = c("grey", "black", "blue"), lwd = c(1, 2, 2), lty = c(1, 1, 2))
+    if (!is.na(legend.loc)) {
+      graphics::legend(legend.loc, legend = c("periodogram", "posterior median", "90% credible region"), 
+                       col = c("grey", "black", "blue"), lwd = c(1, 2, 2), lty = c(1, 1, 2))  
+    }
   }
   if (ylog == FALSE) {
     graphics::plot.default(freq[-bFreq], x$pdgrm[-bFreq], type = "l", col = "grey",
@@ -55,8 +57,9 @@ plot.psd = function(x, legend.loc = "topright", ylog = TRUE, ...) {  # Plot meth
     graphics::lines(freq[-bFreq], x$psd.median[-bFreq], lwd = 2)
     graphics::lines(freq[-bFreq], x$psd.p05[-bFreq], lwd = 2, lty = 2, col = 4)
     graphics::lines(freq[-bFreq], x$psd.p95[-bFreq], lwd = 2, lty = 2, col = 4)
-    graphics::legend(legend.loc, legend = c("periodogram", "posterior median", "90% credible region"), 
-                     col = c("grey", "black", "blue"), lwd = c(1, 2, 2), lty = c(1, 1, 2))
+    if (!is.na(legend.loc)) {
+      graphics::legend(legend.loc, legend = c("periodogram", "posterior median", "90% credible region"), 
+                       col = c("grey", "black", "blue"), lwd = c(1, 2, 2), lty = c(1, 1, 2))  
+    }
   }
-  
 }

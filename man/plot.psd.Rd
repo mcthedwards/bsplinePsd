@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{an object of class psd}
 
-\item{legend.loc}{location of legend out of "topright" (default), "topleft", "bottomright", "bottomleft"}
+\item{legend.loc}{location of legend out of "topright" (default), "topleft", "bottomright", "bottomleft".  If set to NA then no legend will be produced}
 
 \item{ylog}{logical value (default is TRUE) to determine if PSD (y-axis) should be on natural log scale}
 
