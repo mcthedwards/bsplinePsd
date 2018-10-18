@@ -1,3 +1,9 @@
+## bsplinePsd 0.6.0
+
+Have included a scaling/rescaling factor within the code to remove numerical errors when data is close to machine precision.
+
+Have optimised the starting values for the Dirichlet process parameters.
+
 ## bsplinePsd 0.5.0
 
 Previous versions only allowed the user to use cubic B-spline densities.  This version allows the user to choose any degree.  Normalising the  B-splines now uses a trivial integral formula.

@@ -148,6 +148,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// vFromP
+NumericVector vFromP(NumericVector p, const double eps);
+RcppExport SEXP _bsplinePsd_vFromP(SEXP pSEXP, SEXP epsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
+    rcpp_result_gen = Rcpp::wrap(vFromP(p, eps));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mixtureWeight
 NumericVector mixtureWeight(NumericVector p, NumericVector w, unsigned k);
 RcppExport SEXP _bsplinePsd_mixtureWeight(SEXP pSEXP, SEXP wSEXP, SEXP kSEXP) {
@@ -200,6 +212,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bsplinePsd_AnInQ3", (DL_FUNC) &_bsplinePsd_AnInQ3, 1},
     {"_bsplinePsd_AnInQ4", (DL_FUNC) &_bsplinePsd_AnInQ4, 1},
     {"_bsplinePsd_pFromV", (DL_FUNC) &_bsplinePsd_pFromV, 1},
+    {"_bsplinePsd_vFromP", (DL_FUNC) &_bsplinePsd_vFromP, 2},
     {"_bsplinePsd_mixtureWeight", (DL_FUNC) &_bsplinePsd_mixtureWeight, 3},
     {"_bsplinePsd_densityMixture", (DL_FUNC) &_bsplinePsd_densityMixture, 2},
     {"_bsplinePsd_unrollPsd", (DL_FUNC) &_bsplinePsd_unrollPsd, 2},

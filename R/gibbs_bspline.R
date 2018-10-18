@@ -90,6 +90,10 @@ gibbs_bspline <- function(data,
     warning("data has been mean-centered")
   }
   
+  # Optimal rescaling to prevent numerical issues
+  rescale = stats::sd(data)
+  data = data / rescale  # Data now has standard deviation 1
+  
   if (burnin >= Ntotal) stop("burnin must be less than Ntotal")
   if (any(c(MG, MH, G0.alpha, G0.beta, H0.alpha, H0.beta, tau.alpha, tau.beta, k.theta) <= 0)) stop("MG, MH, G0.alpha, G0.beta, H0.alpha, H0.beta, tau.alpha, tau.beta, and k.theta must be strictly positive")
   if (any(c(Ntotal, thin, kmax, LG, LH) %% 1 != 0) || any(c(Ntotal, thin, kmax, LG, LH) <= 0)) stop("Ntotal, thin, kmax, LG, and LH must be strictly positive integers")
@@ -112,11 +116,7 @@ gibbs_bspline <- function(data,
   
   # Starting values
   tau[1] <- stats::var(data) / (2 * pi)
-  V[, 1] <- stats::rbeta(LG, 1, MG)
-  U[, 1] <- stats::rbeta(LH, 1, MH)
-  W[, 1] <- stats::rbeta(LG + 1, G0.alpha, G0.beta)  # G0.alpha = G0.beta = 1 gives U[0,1]
-  Z[, 1] <- stats::rbeta(LH + 1, H0.alpha, H0.beta)  # G0.alpha = G0.beta = 1 gives U[0,1]
-  
+
   if (is.na(k1)) {  # If k1 is NA, user does not specify starting value for k
     k[1] = sample((degree + 2):kmax, 1)  # Need at least k = 5, 4, 3 for cubic, quadratic, linear B-splines respectively
   }
@@ -124,6 +124,12 @@ gibbs_bspline <- function(data,
     if ((k1 < (degree + 2)) || (k1 > kmax)) stop("k1 must be at least degree + 2 and no more than kmax") 
     k[1] <- k1
   }
+  
+  # Optimise starting values for DP parameters
+  V[, 1] = vFromP(rep(1 / (LG + 1), LG))
+  W[, 1] = seq(from=1 / (2 * k[1]), to = 1 - 1 / (2 * k[1]), length.out = LG + 1)
+  U[, 1] = vFromP(rep(1 / (LH + 1), LH))
+  Z[, 1] = seq(from = 1 / (2 * k[1]), to = 1 - 1 / (2 * k[1]), length.out = LH + 1)
 
   # Store log likelihood
   ll.trace <- rep(NA, Ntotal)
@@ -561,12 +567,12 @@ gibbs_bspline <- function(data,
   # pdgrm = kappa * (abs(stats::fft(data)) ^ 2 / (2 * pi * n))[1:N]
   
   # List to output
-  output = list(psd.median = psd.median,
-                psd.mean = psd.mean,
-                psd.p05 = psd.p05,
-                psd.p95 = psd.p95,
-                psd.u05 = psd.u05,
-                psd.u95 = psd.u95,
+  output = list(psd.median = psd.median * rescale ^ 2,
+                psd.mean = psd.mean * rescale ^ 2,
+                psd.p05 = psd.p05 * rescale ^ 2,
+                psd.p95 = psd.p95 * rescale ^ 2,
+                psd.u05 = psd.u05 * rescale ^ 2,
+                psd.u95 = psd.u95 * rescale ^ 2,
                 k = k,
                 tau = tau,
                 V = V,
@@ -575,7 +581,7 @@ gibbs_bspline <- function(data,
                 X = Z,  # Z here is called X in paper
                 knots.trace = knots.trace,
                 ll.trace = ll.trace,
-                pdgrm = pdgrm,
+                pdgrm = pdgrm * rescale ^ 2,
                 n = n)
   
   class(output) = "psd"  # Assign S3 class to object

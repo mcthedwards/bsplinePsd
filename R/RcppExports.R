@@ -67,6 +67,10 @@ pFromV <- function(v) {
     .Call(`_bsplinePsd_pFromV`, v)
 }
 
+vFromP <- function(p, eps = 1e-8) {
+    .Call(`_bsplinePsd_vFromP`, p, eps)
+}
+
 #' C++ function for computing mixture weights of Bernstein-Mixtures given the probabilities p, values w, and degree k.
 #' @keywords internal
 mixtureWeight <- function(p, w, k) {
